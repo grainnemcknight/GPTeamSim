@@ -31,6 +31,7 @@ quart = "^0.18.4"
 anthropic = "^0.2.10"
 websocket-client = "^1.5.2"
 google-cloud-aiplatform = "^1.35.0"
+werkzeug = "2.2.2"
 
 [tool.black]
 line-length = 88
