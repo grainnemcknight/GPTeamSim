@@ -25,6 +25,8 @@ load_dotenv()
 window_request_queue = asyncio.Queue()
 window_response_queue = asyncio.Queue()
 
+global process_world
+
 
 def run_in_new_loop(coro):
     loop = asyncio.new_event_loop()
@@ -78,11 +80,22 @@ def get_server():
     @app.route("/run", )
     async def run():
         try:
+            global process_world
             process_world = Process(target=run_world)
             process_world.start()
             process_world.join()
             # Return a success response
-            return jsonify({'message': 'Profile created successfully'}), 201
+            return jsonify({'message': 'World Started'}), 201
+        except Exception as e:
+            return jsonify({'error': str(e)}), 400
+
+    @app.route("/stop", )
+    async def stop():
+        try:
+            global process_world
+            process_world.terminate()
+            # Return a success response
+            return jsonify({'message': 'World Stopped'}), 201
         except Exception as e:
             return jsonify({'error': str(e)}), 400
 
