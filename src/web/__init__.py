@@ -62,6 +62,17 @@ async def run_world_async():
 def run_world():
     run_in_new_loop(run_world_async())
 
+import subprocess
+
+def run_db_reset_command():
+    try:
+        # Run the command and wait for it to complete
+        subprocess.run("poetry run db-reset", shell=True, check=True)
+        print("Command 'poetry run db-reset' has completed successfully.")
+    except subprocess.CalledProcessError as e:
+        print(f"Command 'poetry run db-reset' failed with return code {e.returncode}.")
+    except Exception as e:
+        print(f"An error occurred: {e}")
 
 def get_server():
     app = Quart(__name__)
@@ -77,9 +88,9 @@ def get_server():
     @app.route("/run", )
     async def run():
         try:
+            run_db_reset_command()
             process_world = Process(target=run_world)
             process_world.start()
-            process_world.join()
             # Return a success response
             return jsonify({'message': 'Profile created successfully'}), 201
         except Exception as e:
