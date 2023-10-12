@@ -4,7 +4,7 @@ import os
 import re
 
 from dotenv import load_dotenv
-from quart import Quart, abort, make_response, send_file, websocket
+from quart import Quart, abort, make_response, send_file, websocket, request, jsonify
 from ..utils.model_name import ChatModelName
 from ..utils.parameters import DEFAULT_FAST_MODEL, DEFAULT_SMART_MODEL
 
@@ -23,10 +23,32 @@ def get_server():
     app.config["ENV"] = "development"
     app.config["DEBUG"] = True
 
-    @app.route("/")
+    @app.route("/",)
     async def index():
         file_path = os.path.join(os.path.dirname(__file__), "templates/logs.html")
         return await send_file(file_path)
+
+    @app.route("/create_profile", methods=["POST"])
+    async def create_profile():
+        # Parse the incoming JSON request data
+        try:
+            data = await request.get_json()
+            name = data.get('name')
+            positive_bio = data.get('positive_bio')
+            private_bio = data.get('private_bio')
+
+            if not name or not positive_bio or not private_bio:
+                return jsonify({'error': 'Missing required fields'}), 400
+
+            # Here, you can add the logic to handle or store the received data, e.g., save it to
+            # a database
+
+            # Return a success response
+            return jsonify({'message': 'Profile created successfully'}), 201
+
+        except Exception as e:
+            return jsonify({'error': str(e)}), 400
+
 
     @app.websocket("/logs")
     async def logs_websocket():
@@ -53,6 +75,8 @@ def get_server():
                             "description": description,
                         }
                         await websocket.send_json(data)
+
+
 
     @app.websocket("/world")
     async def world_websocket():
