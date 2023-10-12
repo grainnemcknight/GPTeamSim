@@ -16,6 +16,7 @@
 
   <!-- Include Babel and JSX Transformer -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/6.26.0/babel.min.js"></script>
+  <script src="./FormStyles.css"></script>
 
   <script type="text/babel">
   var colorMapping = {
@@ -40,44 +41,99 @@
     function LogViewer() {
       const [logs, setLogs] = React.useState({});
       const [worldState, setWorldState] = React.useState();
+      const [currentScreen, setCurrentScreen] = React.useState('personality'); // Initially, show the PersonalityForm
 
-      React.useEffect(() => {
-        const socket = new WebSocket('ws://' + window.location.host + '/logs');
-        socket.onmessage = (e) => {
-          const { agentName, color, title, description } = JSON.parse(e.data)
+      // Define a function to switch to the WorldVisualisation screen
+      const showWorldVisualization = () => {
+        setCurrentScreen('visualization');
+      };
 
+      const onSubmit = () => {
+        startSimulation();
+        showWorldVisualization();
+      };
 
-
-          setLogs((prevLogs) => {
-            const updatedLogs = { ...prevLogs };
-            if (!updatedLogs[agentName]) {
-              updatedLogs[agentName] = [];
-            }
-
-            updatedLogs[agentName] = [{ agentName, color, title, description }, ...updatedLogs[agentName]];
-            return updatedLogs;
+      async function startSimulation() {
+        try {
+          const response = await fetch('/run', {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json', // Set headers if needed
+            },
           });
-        };
 
-        return () => {
-          socket.close();
-        };
-      }, []);
-
-      React.useEffect(() => {
-        const socket = new WebSocket('ws://' + window.location.host + '/world');
-
-        socket.onmessage = (e) => {
-          const data = JSON.parse(e.data);
-          setWorldState(data);
-        };
-
-        return () => {
-          socket.close();
-        };
-      }, []);
+          if (response.ok) {
+            // If the response status is OK (2xx), you can handle the data here
+            const data = await response.json();
+            console.log('Data from the server:', data);
+          } else {
+            // Handle errors for non-OK responses (e.g., 4xx or 5xx)
+            console.error('Error:', response.status, response.statusText);
+          }
+        } catch (error) {
+          // Handle network or fetch-related errors
+          console.error('Fetch error:', error);
+        }
+      }
 
       React.useEffect(() => {
+        console.log("logs", currentScreen);
+        if (currentScreen == 'personality')
+          return;
+        
+        let socket;
+        setTimeout(() => {
+          console.log("logs setup");
+          socket = new WebSocket('ws://' + window.location.host + '/logs');
+          socket.onmessage = (e) => {
+            console.log("logs data", e);
+            const { agentName, color, title, description } = JSON.parse(e.data)
+  
+  
+  
+            setLogs((prevLogs) => {
+              const updatedLogs = { ...prevLogs };
+              if (!updatedLogs[agentName]) {
+                updatedLogs[agentName] = [];
+              }
+  
+              updatedLogs[agentName] = [{ agentName, color, title, description }, ...updatedLogs[agentName]];
+              return updatedLogs;
+            });
+          };
+        }, 3000);
+
+        return () => {
+          if (socket) {
+            socket.close();
+          }
+        };
+      }, [currentScreen]);
+
+      React.useEffect(async () => {
+        console.log("world", currentScreen);
+        if (currentScreen == 'personality')
+          return;
+        
+        let socket;
+        setTimeout(() => {
+          console.log("world setup");
+          socket = new WebSocket('ws://' + window.location.host + '/world');
+          socket.onmessage = (e) => {
+            console.log("world data", e);
+            const data = JSON.parse(e.data);
+            setWorldState(data);
+          };
+        }, 3000);
+
+        return () => {
+          if (socket) {
+            socket.close();
+          }
+        };
+      }, [currentScreen]);
+
+    /*   React.useEffect(() => {
         const socket = new WebSocket('ws://' + window.location.host + '/window');
         
 
@@ -113,13 +169,191 @@
           socket.close();
         };
       }, []);
+ */
+      console.log(currentScreen);
+      console.log(worldState);
 
 
       return (
         <div className="min-h-screen flex overflow-hidden bg-gray-800 text-white">
-          {!worldState && <Loading />}
-          {worldState && <WorldVisualisation worldState={worldState} logs={logs} />}
+          {currentScreen === 'personality' && (
+            <div>
+              <h2>Personality Information Form</h2>
+              <PersonalityForm onSubmit={onSubmit} />
+            </div>
+          )}
+
+          {currentScreen === 'visualization' && (
+            <div>
+              {!worldState ? <Loading /> : <WorldVisualisation worldState={worldState} logs={logs} />}
+            </div>
+          )}
         </div>
+      );
+    }
+
+    function PersonalityForm({ onSubmit }) {
+      const [formData, setFormData] = React.useState({
+        first_name: '',
+        private_bio: '',
+        public_bio: '',
+        directives: [],
+        initial_plan: {
+          description: '',
+          stop_condition: '',
+          location: '',
+        },
+      });
+
+      const handleInputChange = (e) => {
+        const { name, value } = e.target;
+        setFormData({
+          ...formData,
+          [name]: value,
+        });
+      };
+
+      const handleDirectiveChange = (e, index) => {
+        const updatedDirectives = [...formData.directives];
+        updatedDirectives[index] = e.target.value;
+        setFormData({
+          ...formData,
+          directives: updatedDirectives,
+        });
+      };
+
+      const handlePlanChange = (e) => {
+        const { name, value } = e.target;
+        setFormData({
+          ...formData,
+          initial_plan: {
+            ...formData.initial_plan,
+            [name]: value,
+          },
+        });
+      };
+
+      const addDirective = () => {
+        setFormData((prevData) => ({
+          ...prevData,
+          directives: [...prevData.directives, ''], // Add an empty directive
+        }));
+      };
+
+      const handleSubmit = async (e) => {
+        e.preventDefault();
+
+        // Send formData to the backend endpoint "/personality"
+        try {
+          const response = await fetch('/personality', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(formData),
+          });
+
+          if (response.ok) {
+            onSubmit();
+          } else {
+            throw response;
+          }
+        } catch (error) {
+          console.error('Error sending data:', error);
+        }
+      };
+
+      return (
+        <form onSubmit={handleSubmit}>
+          <div className="form-group">
+            <label htmlFor="first_name">First Name:</label>
+            <input
+              type="text"
+              id="name"
+              name="first_name"
+              value={formData.first_name}
+              onChange={handleInputChange}
+              style={{ color: '#000' }}
+            />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="private_bio">Private Bio:</label>
+            <textarea
+              id="private_bio"
+              name="private_bio"
+              value={formData.private_bio}
+              onChange={handleInputChange}
+              style={{ color: '#000' }}
+            />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="public_bio">Public Bio:</label>
+            <textarea
+              id="public_bio"
+              name="public_bio"
+              value={formData.public_bio}
+              onChange={handleInputChange}
+              style={{ color: '#000' }}
+            />
+          </div>
+
+          <div className="form-group">
+            <label>Directives:</label>
+            <ul>
+              {formData.directives.map((directive, index) => (
+                <li key={index}>
+                  <input
+                    type="text"
+                    value={directive}
+                    onChange={(e) => handleDirectiveChange(e, index)}
+                    style={{ color: '#000' }}
+                  />
+                </li>
+              ))}
+            </ul>
+            <button type="button" onClick={addDirective} style={{ border: '1px solid #8888FF' }}>Add Directive</button>
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="initial_plan_description">Initial Plan Description:</label>
+            <input
+              type="text"
+              id="initial_plan_description"
+              name="description"
+              value={formData.initial_plan.description}
+              onChange={handlePlanChange}
+              style={{ color: '#000' }}
+            />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="initial_plan_stop_condition">Initial Plan Stop Condition:</label>
+            <input
+              type="text"
+              id="initial_plan_stop_condition"
+              name="stop_condition"
+              value={formData.initial_plan.stop_condition}
+              onChange={handlePlanChange}
+              style={{ color: '#000' }}
+            />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="initial_plan_location">Initial Plan Location:</label>
+            <input
+              type="text"
+              id="initial_plan_location"
+              name="location"
+              value={formData.initial_plan.location}
+              onChange={handlePlanChange}
+              style={{ color: '#000' }}
+            />
+          </div>
+
+          <button type="submit" style={{ border: '3px solid #8888FF' }}>Submit</button>
+        </form>
       );
     }
 
