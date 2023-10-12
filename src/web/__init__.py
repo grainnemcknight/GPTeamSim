@@ -2,19 +2,65 @@ import asyncio
 import json
 import os
 import re
+import traceback
+from multiprocessing import Process
 
+import openai
 from dotenv import load_dotenv
-from quart import Quart, abort, make_response, send_file, websocket, request, jsonify
+from quart import Quart, abort, send_file, websocket, request, jsonify
+
+
+from src.utils.database.client import get_database
+from src.world.base import World
 from ..utils.model_name import ChatModelName
 from ..utils.parameters import DEFAULT_FAST_MODEL, DEFAULT_SMART_MODEL
 
-from src.utils.database.base import Tables
-from src.utils.database.client import get_database
+from ..utils.colors import LogColor
+from ..utils.database.base import Tables
+from ..utils.formatting import print_to_console
 
 load_dotenv()
 
 window_request_queue = asyncio.Queue()
 window_response_queue = asyncio.Queue()
+
+
+def run_in_new_loop(coro):
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    try:
+        loop.run_until_complete(coro)
+    finally:
+        loop.close()
+
+
+async def run_world_async():
+    openai.api_key = os.getenv("OPENAI_API_KEY")
+    try:
+        database = await get_database()
+
+        worlds = await database.get_all(Tables.Worlds)
+
+        if len(worlds) == 0:
+            raise ValueError("No worlds found!")
+
+        world = await World.from_id(worlds[-1]["id"])
+
+        print_to_console(
+            f"Welcome to {world.name}!",
+            LogColor.ANNOUNCEMENT,
+            "\n",
+        )
+
+        await world.run()
+    except Exception:
+        print(traceback.format_exc())
+    finally:
+        await (await get_database()).close()
+
+
+def run_world():
+    run_in_new_loop(run_world_async())
 
 
 def get_server():
@@ -27,6 +73,17 @@ def get_server():
     async def index():
         file_path = os.path.join(os.path.dirname(__file__), "templates/logs.html")
         return await send_file(file_path)
+
+    @app.route("/run", )
+    async def run():
+        try:
+            process_world = Process(target=run_world)
+            process_world.start()
+            process_world.join()
+            # Return a success response
+            return jsonify({'message': 'Profile created successfully'}), 201
+        except Exception as e:
+            return jsonify({'error': str(e)}), 400
 
     @app.route("/personality", methods=["POST"])
     async def create_profile():
