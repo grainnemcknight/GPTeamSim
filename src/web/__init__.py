@@ -23,7 +23,7 @@ def get_server():
     app.config["ENV"] = "development"
     app.config["DEBUG"] = True
 
-    @app.route("/",)
+    @app.route("/", )
     async def index():
         file_path = os.path.join(os.path.dirname(__file__), "templates/logs.html")
         return await send_file(file_path)
@@ -33,9 +33,11 @@ def get_server():
         # Parse the incoming JSON request data
         try:
             data = await request.get_json()
-            name = data.get('name')
-            positive_bio = data.get('positive_bio')
-            private_bio = data.get('private_bio')
+            name = data.get('first_name')
+            positive_bio = data.get('private_bio')
+            private_bio = data.get('public_bio')
+            directives = data.get('directives')
+            initial_plan = data.get('initial_plan')
 
             if not name or not positive_bio or not private_bio:
                 return jsonify({'error': 'Missing required fields'}), 400
@@ -48,7 +50,6 @@ def get_server():
 
         except Exception as e:
             return jsonify({'error': str(e)}), 400
-
 
     @app.websocket("/logs")
     async def logs_websocket():
@@ -75,8 +76,6 @@ def get_server():
                             "description": description,
                         }
                         await websocket.send_json(data)
-
-
 
     @app.websocket("/world")
     async def world_websocket():
@@ -121,8 +120,8 @@ def get_server():
     @app.websocket("/window")
     async def window_websocket():
         if (
-            DEFAULT_SMART_MODEL != ChatModelName.WINDOW
-            and DEFAULT_FAST_MODEL != ChatModelName.WINDOW
+                DEFAULT_SMART_MODEL != ChatModelName.WINDOW
+                and DEFAULT_FAST_MODEL != ChatModelName.WINDOW
         ):
             return
 
@@ -138,8 +137,8 @@ def get_server():
     @app.websocket("/windowmodel")
     async def window_model_websocket():
         if (
-            DEFAULT_SMART_MODEL != ChatModelName.WINDOW
-            and DEFAULT_FAST_MODEL != ChatModelName.WINDOW
+                DEFAULT_SMART_MODEL != ChatModelName.WINDOW
+                and DEFAULT_FAST_MODEL != ChatModelName.WINDOW
         ):
             return
 
