@@ -7,11 +7,12 @@ from multiprocessing import Process
 
 import openai
 from dotenv import load_dotenv
+from langchain.schema import AIMessage, HumanMessage, SystemMessage
 from quart import Quart, abort, send_file, websocket, request, jsonify
-
 
 from src.utils.database.client import get_database
 from src.world.base import World
+from utils.models import ChatModel
 from ..utils.model_name import ChatModelName
 from ..utils.parameters import DEFAULT_FAST_MODEL, DEFAULT_SMART_MODEL
 
@@ -82,6 +83,32 @@ def get_server():
             process_world.join()
             # Return a success response
             return jsonify({'message': 'Profile created successfully'}), 201
+        except Exception as e:
+            return jsonify({'error': str(e)}), 400
+
+    @app.route("/chat", methods=["POST"])
+    async def chat():
+        try:
+            data = await request.get_json()
+            messages = []
+            for message in data:
+                if message.get("type") == "AI":
+                    messages.append(AIMessage(content=message.get("content")))
+                elif message.get("type") == "HUMAN":
+                    messages.append(HumanMessage(content=message.get("content")))
+                elif message.get("type") == "SYSTEM":
+                    messages.append(SystemMessage(content=message.get("content")))
+                else:
+                    raise ValueError("Invalid message type")
+
+            chat_llm = ChatModel(temperature=0, request_timeout=600)
+            response = await chat_llm.get_chat_completion(
+                messages=messages,
+                loading_text="🤔 Thinking...",
+            )
+            # Return a success response
+            return jsonify({"type": "AI",
+                            "content": response}), 201
         except Exception as e:
             return jsonify({'error': str(e)}), 400
 
