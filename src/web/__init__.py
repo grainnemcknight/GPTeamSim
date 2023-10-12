@@ -42,8 +42,25 @@ def get_server():
             if not name or not positive_bio or not private_bio:
                 return jsonify({'error': 'Missing required fields'}), 400
 
-            # Here, you can add the logic to handle or store the received data, e.g., save it to
-            # a database
+            # Construct the new agent data
+            new_agent = {
+                "first_name": name,
+                "private_bio": positive_bio,  # Again, check if this is correct
+                "public_bio": private_bio,  # Again, check if this is correct
+                "directives": directives,
+                "initial_plan": initial_plan
+            }
+
+            # Load the existing data from config.json
+            with open('config.json', 'r') as file:
+                config_data = json.load(file)
+
+            # Append the new agent data to the "agents" list
+            config_data["agents"].append(new_agent)
+
+            # Write the updated data back to config.json
+            with open('config.json', 'w') as file:
+                json.dump(config_data, file, indent=4)
 
             # Return a success response
             return jsonify({'message': 'Profile created successfully'}), 201
