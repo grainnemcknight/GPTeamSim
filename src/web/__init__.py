@@ -28,7 +28,7 @@ def get_server():
         file_path = os.path.join(os.path.dirname(__file__), "templates/logs.html")
         return await send_file(file_path)
 
-    @app.route("/create_profile", methods=["POST"])
+    @app.route("/personality", methods=["POST"])
     async def create_profile():
         # Parse the incoming JSON request data
         try:
