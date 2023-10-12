@@ -92,9 +92,12 @@ class World(BaseModel):
         await asyncio.gather(*tasks)
 
     async def run_next_agent(self):
-        agent = await self.agent_queue.get()
-        await agent.run_for_one_step()
-        self.agent_queue.put_nowait(agent)
+        try:
+            agent = await self.agent_queue.get()
+            await agent.run_for_one_step()
+            self.agent_queue.put_nowait(agent)
+        except Exception as e:
+            print(e)
 
     async def run_agent_loop(self):
         while True:
