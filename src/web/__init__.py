@@ -146,6 +146,7 @@ def get_server():
             private_bio = data.get('public_bio')
             directives = data.get('directives')
             initial_plan = data.get('initial_plan')
+            initial_plan["location"] = 'Focus Group Room'
 
             if not name or not positive_bio or not private_bio:
                 return jsonify({'error': 'Missing required fields'}), 400

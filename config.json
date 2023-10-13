@@ -1,17 +1,9 @@
 {
-    "world_name": "Paper Trail Inc.",
+    "world_name": "Google Headquarters",
     "locations": [
         {
-            "name": "Executive Office",
-            "description": "Marty's prestigious workspace. A room with a solid oak desk, a glass bookcase filled with business books Marty has never read, and a commanding view of the paper mill outside. Not to forget, the only room in the office with a ceiling fan."
-        },
-        {
-            "name": "Corridor",
-            "description": "A seemingly never-ending stretch of office space flanked by cubicles and a few office plants, which were Rebecca's idea. Has a vintage water cooler and a few office paintings that desperately need an update."
-        },
-        {
-            "name": "Break Room",
-            "description": "The social hub of the office, equipped with a fridge stocked with communal condiments, a microwave that's seen better days, and a mismatched assortment of mugs. The snack vending machine, known for stealing quarters, sits in the corner."
+            "name": "Focus Group Room",
+            "description": "A comfortable room with bean bag chairs and a large whiteboard. The room is used for focus groups and brainstorming sessions."
         }
     ],
     "agents": [
@@ -27,7 +19,7 @@
             "initial_plan": {
                 "description": "Head back to the executive office to sulk and wallow in self-pity about his forgotten birthday.",
                 "stop_condition": "Marty enters his office.",
-                "location": "Corridor"
+                "location": "Focus Group Room"
             }
         },
         {
@@ -42,7 +34,7 @@
             "initial_plan": {
                 "description": "Distract Marty in the corridor with a mix of office chatter, impromptu sales strategies meeting, and spontaneous paper airplane contests.",
                 "stop_condition": "Ricardo signals that he has finished decorating Marty's office.",
-                "location": "Corridor"
+                "location": "Focus Group Room"
             }
         },
         {
@@ -57,7 +49,44 @@
             "initial_plan": {
                 "description": "Sneak into Marty's executive office to set up surprise decorations for his birthday, while avoiding detection.",
                 "stop_condition": "Marty's office is fully decorated and ready for the surprise.",
-                "location": "Executive Office"
+                "location": "Focus Group Room"
+            }
+        },
+        {
+            "first_name": "Grainne",
+            "private_bio": "Female nerd who loves reading and running",
+            "public_bio": "Data Science Lead in Berlin",
+            "directives": [
+                "Buy a phone"
+            ],
+            "initial_plan": {
+                "description": "Ask phone store about ",
+                "stop_condition": "Buying phone",
+                "location": "Focus Group Room"
+            }
+        },
+        {
+            "first_name": "Grainne",
+            "private_bio": "Female nerd in her 30s. \nStubborn\n",
+            "public_bio": "Data Science Lead in Berlin",
+            "directives": [
+                "Discuss Google Pixel"
+            ],
+            "initial_plan": {
+                "description": "Ask about phone",
+                "stop_condition": "Decide whether to buy or not",
+                "location": "Focus Group Room"
+            }
+        },
+        {
+            "first_name": "Nils",
+            "private_bio": "Research Engineer",
+            "public_bio": "Research Engineer who loves apple",
+            "directives": [],
+            "initial_plan": {
+                "description": "Discuss Google Pixel",
+                "stop_condition": "After a conversation with more than 1000 messages",
+                "location": "Focus Group Room"
             }
         }
     ]
