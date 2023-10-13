@@ -119,6 +119,17 @@ def get_server():
             global process_world
             process_world.terminate()
             # Return a success response
+            # Load the existing data from config.json
+            with open('config.json', 'r') as file:
+                config_data = json.load(file)
+
+            # Append the new agent data to the "agents" list
+
+            config_data["agents"] = [config_data["agents"][0]]
+
+            # Write the updated data back to config.json
+            with open('config.json', 'w') as file:
+                json.dump(config_data, file, indent=4)
             return jsonify({'message': 'World Stopped'}), 201
         except Exception as e:
             return jsonify({'error': str(e)}), 400
