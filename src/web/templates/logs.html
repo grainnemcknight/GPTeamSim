@@ -519,15 +519,17 @@ Make sure to generate json.`;
         return (
           <div className="flex flex-col py-2">
             <div className="w-full my-2 px-6 text-center">
-              <h1 className="text-xl font-bold">
-                🌎&nbsp;&nbsp;{worldState.name}
-              </h1>
-              <button
-                style={{ border: "3px solid #8888FF" }}
-                onClick={onEndSimulation}
-              >
-                End simulation
-              </button>
+              <div className="flex justify-between items-center">
+                <h1 className="text-xl font-bold">
+                  🌎&nbsp;&nbsp;{worldState.name}
+                </h1>
+                <button
+                  className="generate-button text-white-500 border border-white hover:bg-blue-500 hover:text-white hover:border-white font-semibold py-3 px-6 m-2 rounded-lg text-lg"
+                  onClick={onEndSimulation}
+                >
+                  End simulation
+                </button>
+              </div>
             </div>
             <div className="h-screen flex w-screen px-3">
               {worldState &&
@@ -681,12 +683,50 @@ Make sure to generate json.`;
           }
         };
         return <div className="flex justify-center items-center w-full flex-col mb-4" style={{maxWidth: "5000px"}}>
-            <h1 className="text-7xl font-semibold mb-4">Focus Pocus</h1>
+            <h1 className="text-7xl font-semibold mb-4">Focus Pocus Analysis</h1>
             { analysis == "loading" && <Loading descr="analysis" />  }
-            { analysis != "loading" && analysis && <div><h1>Analysis:<h2>{analysis}</h2></h1></div> }
+            { analysis != "loading" && analysis && <div dangerouslySetInnerHTML={{ __html: formatText(analysis) }} /> }
             { !analysis && <button onClick={onAnalysis} className="generate-button text-white-500 border border-white hover:bg-blue-500 hover:text-white hover:border-white font-semibold py-3 px-6 m-2 rounded-lg text-lg">Analyze</button> }
         </div>  
       }
+
+      function formatText(text, mode="bullet-points") {
+  const lines = text.split('\n');
+  let formattedText = '';
+  let isList = false;
+
+  for (let line of lines) {
+    line = line.trim();
+    if (line) {
+      if (line.startsWith('- ') && isList) {
+        formattedText += `<li>${line.substring(2)}</li>`;
+      } else {
+        if (isList) {
+          formattedText += '</ul>';
+          isList = false;
+        }
+
+        if (mode === 'analysis') {
+          formattedText += `<p className="text-sm">${line}</p>`;
+        } else if (mode === 'bullet-points') {
+          if (line.startsWith('Positive opinions') || line.startsWith('Negative opinions') || line.startsWith('Questions about')) {
+            formattedText += `<h2 className="text-m">${line}</h2>`;
+          } else {
+            isList = true;
+            formattedText += '<ul>';
+            formattedText += `<li><p className="text-sm">${line.substring(2)}</p></li>`;
+          }
+        }
+      }
+    }
+  }
+
+  if (isList) {
+    formattedText += '</ul>';
+  }
+
+  return formattedText;
+}
 
       ReactDOM.render(<LogViewer />, document.getElementById("root"));
     </script>
