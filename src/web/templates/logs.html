@@ -1,139 +1,195 @@
 <!DOCTYPE html>
 <html>
+  <head>
+    <title>GPTeam</title>
+    <meta charset="UTF-8" />
+    <link
+      href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.7/dist/tailwind.min.css"
+      rel="stylesheet"
+    />
+  </head>
 
-<head>
-  <title>GPTeam</title>
-  <meta charset="UTF-8">
-  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.7/dist/tailwind.min.css" rel="stylesheet">
-</head>
+  <body>
+    <div id="root"></div>
 
-<body>
-  <div id="root"></div>
+    <!-- Include React and ReactDOM -->
+    <script src="https://cdn.jsdelivr.net/npm/react@17.0.2/umd/react.production.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/react-dom@17.0.2/umd/react-dom.production.min.js"></script>
 
-  <!-- Include React and ReactDOM -->
-  <script src="https://cdn.jsdelivr.net/npm/react@17.0.2/umd/react.production.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/react-dom@17.0.2/umd/react-dom.production.min.js"></script>
+    <!-- Include Babel and JSX Transformer -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/6.26.0/babel.min.js"></script>
+    <script src="./FormStyles.css"></script>
 
-  <!-- Include Babel and JSX Transformer -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/6.26.0/babel.min.js"></script>
-  <script src="./FormStyles.css"></script>
-
-  <script type="text/babel">
-  var colorMapping = {
-    'GENERAL': 'white',
-    'ERROR': 'red',
-    'ANNOUNCEMENT': 'lightmagenta',
-    'CLI_INPUT': 'lightblack',
-    'AGENT_0': 'lightgreen',
-    'AGENT_1': 'yellow',
-    'AGENT_2': 'magenta',
-    'AGENT_3': 'blue',
-    'AGENT_4': 'red',
-    'AGENT_5': 'lightcyan',
-    'AGENT_6': 'cyan',
-    'AGENT_7': 'lightyellow',
-    'AGENT_8': 'lightblue',
-    'AGENT_9': 'green'
-  }
-
-
-
-    function LogViewer() {
-      const [logs, setLogs] = React.useState({});
-      const [worldState, setWorldState] = React.useState();
-      const [currentScreen, setCurrentScreen] = React.useState('personality'); // Initially, show the PersonalityForm
-
-      // Define a function to switch to the WorldVisualisation screen
-      const showWorldVisualization = () => {
-        setCurrentScreen('visualization');
+    <script type="text/babel">
+      var colorMapping = {
+        GENERAL: "white",
+        ERROR: "red",
+        ANNOUNCEMENT: "lightmagenta",
+        CLI_INPUT: "lightblack",
+        AGENT_0: "lightgreen",
+        AGENT_1: "yellow",
+        AGENT_2: "magenta",
+        AGENT_3: "blue",
+        AGENT_4: "red",
+        AGENT_5: "lightcyan",
+        AGENT_6: "cyan",
+        AGENT_7: "lightyellow",
+        AGENT_8: "lightblue",
+        AGENT_9: "green",
       };
 
-      const onSubmit = () => {
-        startSimulation();
-        showWorldVisualization();
-      };
-
-      async function startSimulation() {
+      async function chat(history) {
         try {
-          const response = await fetch('/run', {
-            method: 'GET',
+          const response = await fetch("/chat", {
+            method: "POST",
             headers: {
-              'Content-Type': 'application/json', // Set headers if needed
+              "Content-Type": "application/json", // Set headers if needed
+            },
+            body: JSON.stringify(history),
+          });
+
+          if (response.ok) {
+            // If the response status is OK (2xx), you can handle the data here
+            const data = await response.json();
+            console.log("Data from the server:", data);
+            return data;
+          } else {
+            // Handle errors for non-OK responses (e.g., 4xx or 5xx)
+            console.error("Error:", response.status, response.statusText, await response.json());
+            return null;
+          }
+        } catch (error) {
+          // Handle network or fetch-related errors
+          console.error("Fetch error:", error);
+          return null;
+        }
+      }
+
+      async function stopSimulation() {
+        try {
+          const response = await fetch("/stop", {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json", // Set headers if needed
             },
           });
 
           if (response.ok) {
             // If the response status is OK (2xx), you can handle the data here
             const data = await response.json();
-            console.log('Data from the server:', data);
+            console.log("Data from the server:", data);
           } else {
             // Handle errors for non-OK responses (e.g., 4xx or 5xx)
-            console.error('Error:', response.status, response.statusText);
+            console.error("Error:", response.status, response.statusText);
           }
         } catch (error) {
           // Handle network or fetch-related errors
-          console.error('Fetch error:', error);
+          console.error("Fetch error:", error);
         }
       }
 
-      React.useEffect(() => {
-        console.log("logs", currentScreen);
-        if (currentScreen == 'personality')
-          return;
-        
-        let socket;
-        setTimeout(() => {
-          console.log("logs setup");
-          socket = new WebSocket('ws://' + window.location.host + '/logs');
-          socket.onmessage = (e) => {
-            console.log("logs data", e);
-            const { agentName, color, title, description } = JSON.parse(e.data)
-  
-  
-  
-            setLogs((prevLogs) => {
-              const updatedLogs = { ...prevLogs };
-              if (!updatedLogs[agentName]) {
-                updatedLogs[agentName] = [];
-              }
-  
-              updatedLogs[agentName] = [{ agentName, color, title, description }, ...updatedLogs[agentName]];
-              return updatedLogs;
-            });
-          };
-        }, 3000);
+      async function startSimulation() {
+        try {
+          const response = await fetch("/run", {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json", // Set headers if needed
+            },
+          });
 
-        return () => {
-          if (socket) {
-            socket.close();
+          if (response.ok) {
+            // If the response status is OK (2xx), you can handle the data here
+            const data = await response.json();
+            console.log("Data from the server:", data);
+          } else {
+            // Handle errors for non-OK responses (e.g., 4xx or 5xx)
+            console.error("Error:", response.status, response.statusText);
           }
-        };
-      }, [currentScreen]);
+        } catch (error) {
+          // Handle network or fetch-related errors
+          console.error("Fetch error:", error);
+        }
+      }
 
-      React.useEffect(async () => {
-        console.log("world", currentScreen);
-        if (currentScreen == 'personality')
-          return;
-        
-        let socket;
-        setTimeout(() => {
-          console.log("world setup");
-          socket = new WebSocket('ws://' + window.location.host + '/world');
-          socket.onmessage = (e) => {
-            console.log("world data", e);
-            const data = JSON.parse(e.data);
-            setWorldState(data);
+      function LogViewer() {
+        const [logs, setLogs] = React.useState({});
+        const [worldState, setWorldState] = React.useState();
+        const [currentScreen, setCurrentScreen] = React.useState("personality"); // Initially, show the PersonalityForm
+
+        // Define a function to switch to the WorldVisualisation screen
+        const showWorldVisualization = () => {
+          setCurrentScreen("visualization");
+        };
+
+        const onSubmit = () => {
+          startSimulation();
+          showWorldVisualization();
+        };
+
+        const onEndSimulation = () => {
+          stopSimulation();
+          setCurrentScreen("analysis");
+        };
+
+        React.useEffect(() => {
+          console.log("logs", currentScreen);
+          if (currentScreen == "personality") return;
+
+          let socket;
+          setTimeout(() => {
+            console.log("logs setup");
+            socket = new WebSocket("ws://" + window.location.host + "/logs");
+            socket.onmessage = (e) => {
+              console.log("logs data", e);
+              const { agentName, color, title, description } = JSON.parse(
+                e.data
+              );
+
+              setLogs((prevLogs) => {
+                const updatedLogs = { ...prevLogs };
+                if (!updatedLogs[agentName]) {
+                  updatedLogs[agentName] = [];
+                }
+
+                updatedLogs[agentName] = [
+                  { agentName, color, title, description },
+                  ...updatedLogs[agentName],
+                ];
+                return updatedLogs;
+              });
+            };
+          }, 3000);
+
+          return () => {
+            if (socket) {
+              socket.close();
+            }
           };
-        }, 3000);
+        }, [currentScreen]);
 
-        return () => {
-          if (socket) {
-            socket.close();
-          }
-        };
-      }, [currentScreen]);
+        React.useEffect(async () => {
+          console.log("world", currentScreen);
+          if (currentScreen == "personality") return;
 
-    /*   React.useEffect(() => {
+          let socket;
+          setTimeout(() => {
+            console.log("world setup");
+            socket = new WebSocket("ws://" + window.location.host + "/world");
+            socket.onmessage = (e) => {
+              console.log("world data", e);
+              const data = JSON.parse(e.data);
+              setWorldState(data);
+            };
+          }, 3000);
+
+          return () => {
+            if (socket) {
+              socket.close();
+            }
+          };
+        }, [currentScreen]);
+
+        /*   React.useEffect(() => {
         const socket = new WebSocket('ws://' + window.location.host + '/window');
         
 
@@ -170,287 +226,439 @@
         };
       }, []);
  */
-      console.log(currentScreen);
-      console.log(worldState);
+        console.log(currentScreen);
+        console.log(worldState);
 
+        return (
+          <div className="min-h-screen flex overflow-hidden bg-gray-800 text-white">
+            {currentScreen === "personality" && (
+              <div>
+                <h2>Personality Information Form</h2>
+                <PersonalityForm onSubmit={onSubmit} />
+              </div>
+            )}
 
-      return (
-        <div className="min-h-screen flex overflow-hidden bg-gray-800 text-white">
-          {currentScreen === 'personality' && (
-            <div>
-              <h2>Personality Information Form</h2>
-              <PersonalityForm onSubmit={onSubmit} />
-            </div>
-          )}
+            {currentScreen === "visualization" && (
+              <div>
+                {!worldState ? (
+                  <Loading />
+                ) : (
+                  <WorldVisualisation worldState={worldState} logs={logs} onEndSimulation={onEndSimulation}/>
+                )}
+              </div>
+            )}
 
-          {currentScreen === 'visualization' && (
-            <div>
-              {!worldState ? <Loading /> : <WorldVisualisation worldState={worldState} logs={logs} />}
-            </div>
-          )}
-        </div>
-      );
-    }
+            {currentScreen === "analysis" && (
+              <Analysis />
+            )}
+          </div>
+        );
+      }
 
-    function PersonalityForm({ onSubmit }) {
-      const [formData, setFormData] = React.useState({
-        first_name: '',
-        private_bio: '',
-        public_bio: '',
-        directives: [],
-        initial_plan: {
-          description: '',
-          stop_condition: '',
-          location: '',
-        },
-      });
-
-      const handleInputChange = (e) => {
-        const { name, value } = e.target;
-        setFormData({
-          ...formData,
-          [name]: value,
-        });
-      };
-
-      const handleDirectiveChange = (e, index) => {
-        const updatedDirectives = [...formData.directives];
-        updatedDirectives[index] = e.target.value;
-        setFormData({
-          ...formData,
-          directives: updatedDirectives,
-        });
-      };
-
-      const handlePlanChange = (e) => {
-        const { name, value } = e.target;
-        setFormData({
-          ...formData,
-          initial_plan: {
-            ...formData.initial_plan,
-            [name]: value,
-          },
-        });
-      };
-
-      const addDirective = () => {
-        setFormData((prevData) => ({
-          ...prevData,
-          directives: [...prevData.directives, ''], // Add an empty directive
-        }));
-      };
-
-      const handleSubmit = async (e) => {
-        e.preventDefault();
-
+      async function submitPersonality(personality) {
         // Send formData to the backend endpoint "/personality"
         try {
-          const response = await fetch('/personality', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(formData),
-          });
+            const response = await fetch("/personality", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify(personality),
+            });
 
-          if (response.ok) {
-            onSubmit();
-          } else {
-            throw response;
+            if (response.ok) {
+            } else {
+              throw response;
+            }
+          } catch (error) {
+            console.error("Error sending data:", error);
           }
-        } catch (error) {
-          console.error('Error sending data:', error);
-        }
+      }
+
+      function PersonalityForm({ onSubmit }) {
+        const [formData, setFormData] = React.useState({
+          first_name: "",
+          private_bio: "",
+          public_bio: "",
+          directives: [],
+          initial_plan: {
+            description: "",
+            stop_condition: "",
+            location: "",
+          },
+        });
+
+        const handleInputChange = (e) => {
+          const { name, value } = e.target;
+          setFormData({
+            ...formData,
+            [name]: value,
+          });
+        };
+
+        const handleDirectiveChange = (e, index) => {
+          const updatedDirectives = [...formData.directives];
+          updatedDirectives[index] = e.target.value;
+          setFormData({
+            ...formData,
+            directives: updatedDirectives,
+          });
+        };
+
+        const handlePlanChange = (e) => {
+          const { name, value } = e.target;
+          setFormData({
+            ...formData,
+            initial_plan: {
+              ...formData.initial_plan,
+              [name]: value,
+            },
+          });
+        };
+
+        const addDirective = () => {
+          setFormData((prevData) => ({
+            ...prevData,
+            directives: [...prevData.directives, ""], // Add an empty directive
+          }));
+        };
+
+        const handleSubmit = async (e) => {
+          e.preventDefault();
+
+          submitPersonality(formData);
+        };
+
+        const [personas, setPersonas] = React.useState([]);
+        const addPersonas = (persona) => setPersonas(personas.concat(persona));
+        let retries = 0;
+        const generatePersonas = async () => {
+          const count = 3;
+          const prompt = `I want you to generate ${count} diverse customer persona like the following example. In the directive section, tell
+1. what happened and why the persona needs or considers a new phone. It can just it is old, or broke or lost or felt in the water, or etc.
+2. What the persona thinks and want in a phone,
+3. what is the budget. or other limiting factors.
+[{
+          "first_name": "Sarah",
+          "private_bio": "Sara's Big Five Personality Test (BFPT),  Extroversion 10/40, Neuroticism 19/40, Openness to Experience 32/40, Agreeableness 32/40, Conscientiousness 38/40.
+Sarah is a photography enthusiast with a keen eye for capturing moments. She loves to travel, she like to cook. She hate math. She loves poetry. Her favorite TV show is friend. She is heterosexual, ",
+          "public_bio": "Sara is 34, BSc in philosophy, sara is a teacher, and she is single mother of two girls. She rent a house in Detroit's suburb.",
+          "directives": [
+              "Saras phone just fell down in the toilet and is not working",
+              "Sara needs to get a new phone.",
+              "Sara needs to get credit debt for that."
+          ]
+      }, ...]
+Make sure to generate json.`;
+          const response = await chat([{
+            type: "AI",
+            content: prompt,
+          }]);
+          if (response) {
+            try {
+              const personas = JSON.parse(response.content)
+                .map((persona) => ({
+                  ...persona, 
+                  initial_plan: {
+                    "description": "Wait until Eric has welcomed and started the focus group.",
+                    "stop_condition": "Eric has asked a question and the disussion has started.",
+                    "location": "Google Head Quarters",
+                  }
+                }));
+              addPersonas(personas);
+              personas.forEach(submitPersonality);
+            } catch (error) {
+              console.error("error while generating personas. Retrying: ", error, response.content);
+              if (retries++ < 10) {
+                generatePersonas();
+              }
+            }
+          }
+        };
+        
+        return (
+          <div>
+            {
+              personas.map((persona) => <div><h1>{persona.name}</h1><p>{persona.public_bio}</p><p>{persona.private_bio}</p></div>)
+            }
+            <form onSubmit={handleSubmit}>
+              <div className="form-group">
+                <label htmlFor="first_name">First Name:</label>
+                <input
+                  type="text"
+                  id="name"
+                  name="first_name"
+                  value={formData.first_name}
+                  onChange={handleInputChange}
+                  style={{ color: "#000" }}
+                />
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="private_bio">Private Bio:</label>
+                <textarea
+                  id="private_bio"
+                  name="private_bio"
+                  value={formData.private_bio}
+                  onChange={handleInputChange}
+                  style={{ color: "#000" }}
+                />
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="public_bio">Public Bio:</label>
+                <textarea
+                  id="public_bio"
+                  name="public_bio"
+                  value={formData.public_bio}
+                  onChange={handleInputChange}
+                  style={{ color: "#000" }}
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Directives:</label>
+                <ul>
+                  {formData.directives.map((directive, index) => (
+                    <li key={index}>
+                      <input
+                        type="text"
+                        value={directive}
+                        onChange={(e) => handleDirectiveChange(e, index)}
+                        style={{ color: "#000" }}
+                      />
+                    </li>
+                  ))}
+                </ul>
+                <button
+                  type="button"
+                  onClick={addDirective}
+                  style={{ border: "1px solid #8888FF" }}
+                >
+                  Add Directive
+                </button>
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="initial_plan_description">
+                  Initial Plan Description:
+                </label>
+                <input
+                  type="text"
+                  id="initial_plan_description"
+                  name="description"
+                  value={formData.initial_plan.description}
+                  onChange={handlePlanChange}
+                  style={{ color: "#000" }}
+                />
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="initial_plan_stop_condition">
+                  Initial Plan Stop Condition:
+                </label>
+                <input
+                  type="text"
+                  id="initial_plan_stop_condition"
+                  name="stop_condition"
+                  value={formData.initial_plan.stop_condition}
+                  onChange={handlePlanChange}
+                  style={{ color: "#000" }}
+                />
+              </div>
+
+              <button type="submit" style={{ border: "3px solid #8888FF" }}>
+                Add persona
+              </button>
+              <button
+                type="button"
+                onClick={onSubmit}
+                style={{ border: "3px solid #8888FF" }}
+              >
+                Start
+              </button>
+            </form>
+            <button onClick={generatePersonas} style={{ border: "3px solid #8888FF" }}>
+              Generate personas
+            </button>
+          </div>
+        );
+      }
+
+      function WorldVisualisation({ worldState, logs, onEndSimulation }) {
+        return (
+          <div className="flex flex-col py-2">
+            <div className="w-full my-2 px-6 text-center">
+              <h1 className="text-xl font-bold">
+                🌎&nbsp;&nbsp;{worldState.name}
+              </h1>
+              <button
+                style={{ border: "3px solid #8888FF" }}
+                onClick={onEndSimulation}
+              >
+                End simulation
+              </button>
+            </div>
+            <div className="h-screen flex w-screen px-3">
+              {worldState &&
+                worldState.agents.map((agent) => (
+                  <AgentWindow
+                    agent={agent}
+                    logLines={logs[agent.full_name] || []}
+                    columnWidth={`${100 / worldState.agents.length}%`}
+                  />
+                ))}
+            </div>
+          </div>
+        );
+      }
+
+      function LogLine({ log, type }) {
+        const { agentName, color, title, description } = log;
+
+        return (
+          <div className="mb-4 font-mono">
+            <span style={{ color: colorMapping[color], fontWeight: "bold" }}>
+              {title}
+            </span>{" "}
+            <TypeWriter text={description} enabled={type} />
+          </div>
+        );
+      }
+
+      function AgentWindow({ agent, logLines, columnWidth }) {
+        return (
+          <div style={{ width: columnWidth }} className="px-3 py-2 h-full">
+            <AgentInformation agent={agent} logLines={logLines} />
+            <LogWindow logLines={logLines} />
+          </div>
+        );
+      }
+
+      function LogWindow({ logLines }) {
+        return (
+          <div className="h-full overflow-auto bg-black text-white p-4 text-sm rounded-md">
+            {logLines.map((log, index) => (
+              <LogLine key={index} log={log} type={index === 0} />
+            ))}
+          </div>
+        );
+      }
+
+      const AGENT_STATUSES = {
+        Observe: "👀 Observing",
+        Act: "🚀 Taking Action",
+        React: "🔄 Reacting",
+        "Starting to Plan": "📝 Planning",
+        "Moved Location": "🚶‍♂️ Moving",
+        Reflection: "🤔 Reflecting",
+        Gossip: "💬 Gossiping",
       };
 
-      return (
-        <form onSubmit={handleSubmit}>
-          <div className="form-group">
-            <label htmlFor="first_name">First Name:</label>
-            <input
-              type="text"
-              id="name"
-              name="first_name"
-              value={formData.first_name}
-              onChange={handleInputChange}
-              style={{ color: '#000' }}
-            />
-          </div>
+      function AgentInformation({ agent, logLines }) {
+        const statusLogs = logLines.filter((line) =>
+          AGENT_STATUSES.hasOwnProperty(line.title)
+        );
+        const latestLog = statusLogs.length > 0 ? statusLogs[0] : null;
+        const agentStatus = latestLog
+          ? AGENT_STATUSES[latestLog.title]
+          : "Unknown";
 
-          <div className="form-group">
-            <label htmlFor="private_bio">Private Bio:</label>
-            <textarea
-              id="private_bio"
-              name="private_bio"
-              value={formData.private_bio}
-              onChange={handleInputChange}
-              style={{ color: '#000' }}
-            />
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="public_bio">Public Bio:</label>
-            <textarea
-              id="public_bio"
-              name="public_bio"
-              value={formData.public_bio}
-              onChange={handleInputChange}
-              style={{ color: '#000' }}
-            />
-          </div>
-
-          <div className="form-group">
-            <label>Directives:</label>
-            <ul>
-              {formData.directives.map((directive, index) => (
-                <li key={index}>
-                  <input
-                    type="text"
-                    value={directive}
-                    onChange={(e) => handleDirectiveChange(e, index)}
-                    style={{ color: '#000' }}
-                  />
-                </li>
-              ))}
-            </ul>
-            <button type="button" onClick={addDirective} style={{ border: '1px solid #8888FF' }}>Add Directive</button>
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="initial_plan_description">Initial Plan Description:</label>
-            <input
-              type="text"
-              id="initial_plan_description"
-              name="description"
-              value={formData.initial_plan.description}
-              onChange={handlePlanChange}
-              style={{ color: '#000' }}
-            />
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="initial_plan_stop_condition">Initial Plan Stop Condition:</label>
-            <input
-              type="text"
-              id="initial_plan_stop_condition"
-              name="stop_condition"
-              value={formData.initial_plan.stop_condition}
-              onChange={handlePlanChange}
-              style={{ color: '#000' }}
-            />
-          </div>
-
-          <button type="submit" style={{ border: '3px solid #8888FF' }}>Submit</button>
-        </form>
-      );
-    }
-
-    function WorldVisualisation({ worldState, logs }) {
-      return (
-        <div className="flex flex-col py-2">
-          <div className="w-full my-2 px-6 text-center">
-            <h1 className="text-xl font-bold">🌎&nbsp;&nbsp;{worldState.name}</h1>
-          </div>
-          <div className="h-screen flex w-screen px-3">
-            {worldState && worldState.agents.map((agent) => <AgentWindow agent={agent} logLines={logs[agent.full_name] || []} columnWidth={`${100 / worldState.agents.length}%`} />)}
-          </div>
-        </div>
-      );
-    }
-
-    function LogLine({ log, type }) {
-      const { agentName, color, title, description } = log;
-
-      return (
-        <div className="mb-4 font-mono">
-          <span style={{ color: colorMapping[color], fontWeight: 'bold' }}>{title}</span>{" "}
-          <TypeWriter text={description} enabled={type} />
-        </div>
-      );
-    }
-
-    function AgentWindow({ agent, logLines, columnWidth }) {
-      return (
-        <div style={{ width: columnWidth }} className="px-3 py-2 h-full">
-          <AgentInformation agent={agent} logLines={logLines} />
-          <LogWindow logLines={logLines} />
-        </div>
-      );
-    }
-
-    function LogWindow({ logLines }) {
-      return (
-        <div className="h-full overflow-auto bg-black text-white p-4 text-sm rounded-md">
-          {logLines.map((log, index) => (
-            <LogLine key={index} log={log} type={index === 0} />
-          ))}
-        </div>
-      );
-    }
-
-    const AGENT_STATUSES = {
-      "Observe": "👀 Observing",
-      "Act": "🚀 Taking Action",
-      "React": "🔄 Reacting",
-      "Starting to Plan": "📝 Planning",
-      "Moved Location": "🚶‍♂️ Moving",
-      "Reflection": "🤔 Reflecting",
-      "Gossip": "💬 Gossiping",
-    };
-
-    function AgentInformation({ agent, logLines }) {
-      const statusLogs = logLines.filter((line) => AGENT_STATUSES.hasOwnProperty(line.title));
-      const latestLog = statusLogs.length > 0 ? statusLogs[0] : null;
-      const agentStatus = latestLog ? AGENT_STATUSES[latestLog.title] : 'Unknown';
-
-      return (
-        <div class="bg-gray-800 h-min text-white pb-4">
-          <div class="flex items-end h-full">
-            <div class="w-1/2">
-              <h2 class="text-lg font-bold">{agent.full_name}</h2>
-              <p class="text-base">🗺️ Location: {agent.location}</p>
-            </div>
-            <div class="w-1/2">
-              <p class="text-right text-base">{agentStatus}</p>
+        return (
+          <div class="bg-gray-800 h-min text-white pb-4">
+            <div class="flex items-end h-full">
+              <div class="w-1/2">
+                <h2 class="text-lg font-bold">{agent.full_name}</h2>
+                <p class="text-base">🗺️ Location: {agent.location}</p>
+              </div>
+              <div class="w-1/2">
+                <p class="text-right text-base">{agentStatus}</p>
+              </div>
             </div>
           </div>
-        </div>
-      );
-    }
+        );
+      }
 
+      function TypeWriter({ text, enabled }) {
+        const [currentIndex, setCurrentIndex] = React.useState(0);
 
+        React.useEffect(() => {
+          const intervalId = setInterval(() => {
+            setCurrentIndex((prevIndex) => prevIndex + 1);
+          }, 10);
 
-    function TypeWriter({ text, enabled }) {
-      const [currentIndex, setCurrentIndex] = React.useState(0);
+          return () => {
+            clearInterval(intervalId);
+          };
+        }, []);
 
-      React.useEffect(() => {
-        const intervalId = setInterval(() => {
-          setCurrentIndex((prevIndex) => prevIndex + 1);
-        }, 10);
+        return <span>{enabled ? text.substring(0, currentIndex) : text}</span>;
+      }
 
-        return () => {
-          clearInterval(intervalId);
+      function Loading() {
+        return (
+          <div className="flex w-full items-center justify-center">
+            <svg
+              className="animate-spin -ml-1 mr-3 h-8 w-8 text-white"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <circle
+                className="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                strokeWidth="4"
+              ></circle>
+              <path
+                className="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647zM20 12a8 8 0 01-8 8v-4a4 4 0 004-4h4zm-2-5.291A7.962 7.962 0 0120 12h4c0-3.042-1.135-5.824-3-7.938l-3 2.647z"
+              ></path>
+            </svg>
+            <span className="animate-pulse font-semibold">
+              Initializing world...
+            </span>
+          </div>
+        );
+      }
+
+      function Analysis() {
+        const [analysis, setAnalysis] = React.useState(null);
+        const onAnalysis = async () => {
+          try {
+            const response = await fetch("/analyze", {
+              method: "GET",
+              headers: {
+                "Content-Type": "application/json", // Set headers if needed
+              },
+            });
+
+            if (response.ok) {
+              // If the response status is OK (2xx), you can handle the data here
+              const data = await response.json();
+              console.log("Data from the server:", data);
+              setAnalysis(data);
+            } else {
+              // Handle errors for non-OK responses (e.g., 4xx or 5xx)
+              console.error("Error:", response.status, response.statusText, await response.json());
+            }
+          } catch (error) {
+            // Handle network or fetch-related errors
+            console.error("Fetch error:", error);
+          }
         };
-      }, []);
-
-      return <span>{enabled ? text.substring(0, currentIndex) : text}</span>;
-    }
-
-    function Loading() {
-      return (
-        <div className="flex w-full items-center justify-center">
-          <svg className="animate-spin -ml-1 mr-3 h-8 w-8 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647zM20 12a8 8 0 01-8 8v-4a4 4 0 004-4h4zm-2-5.291A7.962 7.962 0 0120 12h4c0-3.042-1.135-5.824-3-7.938l-3 2.647z"></path>
-          </svg>
-          <span className="animate-pulse font-semibold">Initializing world...</span>
+        return <div>
+          <div>
+            { analysis && <div><h1>Analysis:<h2>{analysis}</h2></h1></div> }
+          </div>
+          <button onClick={onAnalysis}>Analyze</button>  
         </div>
-      );
-    }
+      }
 
-
-    ReactDOM.render(<LogViewer />, document.getElementById('root'));
-  </script>
-</body>
-
+      ReactDOM.render(<LogViewer />, document.getElementById("root"));
+    </script>
+  </body>
 </html>
