@@ -216,16 +216,18 @@ def get_server():
                         }
                         await websocket.send_json(data)
 
-    @app.websocket("/analyze")
+    @app.route("/analyze")
     async def logs_analyze():
-        file_path = os.path.join(os.path.dirname(__file__), "logs/agent.txt")
-        conversation = "Focus Group Conversation:\n"
         try:
+            print("analyze")
+            file_path = os.path.join(os.path.dirname(__file__), "logs/agent.txt")
+            conversation = "Focus Group Conversation:\n"
             messages = []
             with open(file_path, "r") as log_file:
                 for line in log_file:
                     if "Error:" not in line:
                         conversation += line + "\n"
+            print("after file")
 
             count_tokens = num_tokens_from_string(conversation, "gpt-3.5-turbo")
             if count_tokens > 2048:
@@ -237,15 +239,20 @@ def get_server():
                                                   "transcript and "
                                                   "identify insights about the product"))
             messages.append(HumanMessage(content=conversation))
+            print("asking now")
             chat_llm = ChatModel(temperature=0, request_timeout=600)
             response = await chat_llm.get_chat_completion(
                 messages=messages,
                 loading_text="🤔 Analyzing...",
             )
+            print("response")
+
 
             return jsonify(response), 201
 
         except Exception as e:
+            print("EEEEEEEEEEEEEEEEEEERRRRRRRRRRRRROOOOOOOOOOOOOOORRRRRRRRRRR")
+            print(e)
             return jsonify(str(e)), 400
 
     @app.websocket("/world")

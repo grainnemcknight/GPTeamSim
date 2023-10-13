@@ -133,7 +133,7 @@
 
         React.useEffect(() => {
           console.log("logs", currentScreen);
-          if (currentScreen == "personality") return;
+          if (currentScreen != "visualization") return;
 
           let socket;
           setTimeout(() => {
@@ -169,7 +169,7 @@
 
         React.useEffect(async () => {
           console.log("world", currentScreen);
-          if (currentScreen == "personality") return;
+          if (currentScreen != "visualization") return;
 
           let socket;
           setTimeout(() => {
@@ -231,7 +231,7 @@
 
         return (
           <div className="min-h-screen flex overflow-hidden bg-gray-800 text-white">
-            {currentScreen === "personality" && (
+            {currentScreen != "visualization" && (
               <div>
                 <h2>Personality Information Form</h2>
                 <PersonalityForm onSubmit={onSubmit} />
