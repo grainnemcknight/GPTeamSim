@@ -223,21 +223,27 @@ def get_server():
             file_path = os.path.join(os.path.dirname(__file__), "logs/agent.txt")
             conversation = "Focus Group Conversation:\n"
             messages = []
-            with open(file_path, "r") as log_file:
+            with (open(file_path, "r") as log_file):
                 for line in log_file:
-                    if "Error:" not in line:
+                    if ("Error:" not in line and
+                            'plan' not in line.lower() and
+                            'waiting' not in line.lower() and
+                            'wait' not in line.lower() and
+                            len(line) > 100):
                         conversation += line + "\n"
             print("after file")
 
             count_tokens = num_tokens_from_string(conversation, "gpt-3.5-turbo")
             if count_tokens > 2048:
                 conversation = conversation[:1200]
-            conversation += "\n What are the main insights from this focus group conversation?"
+            conversation += ("\n Please list the positive and negative opinions and questions the "
+                             "focus group had about the product. ")
 
             messages.append(SystemMessage(content="You are a Market Researcher whose task is to "
                                                   "analyze the focus group conversation "
-                                                  "transcript and "
-                                                  "identify insights about the product"))
+                                                  "transcript and identify the perceived "
+                                                  "positives and negatives"
+                                                  "and major questions about the product."))
             messages.append(HumanMessage(content=conversation))
             print("asking now")
             chat_llm = ChatModel(temperature=0, request_timeout=600)
