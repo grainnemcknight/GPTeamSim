@@ -27,6 +27,16 @@ window_response_queue = asyncio.Queue()
 
 global process_world
 
+import tiktoken
+
+
+# Write function to take string input and return number of tokens
+def num_tokens_from_string(string: str, encoding_name: str) -> int:
+    """Returns the number of tokens in a text string."""
+    encoding = tiktoken.encoding_for_model(encoding_name)
+    num_tokens = len(encoding.encode(string))
+    return num_tokens
+
 
 def run_in_new_loop(coro):
     loop = asyncio.new_event_loop()
@@ -149,7 +159,7 @@ def get_server():
             private_bio = data.get('public_bio')
             directives = data.get('directives')
             initial_plan = data.get('initial_plan')
-            initial_plan["location"] = 'Focus Group Room'
+            initial_plan["location"] = 'Google Head Quarters'
 
             if not name or not positive_bio or not private_bio:
                 return jsonify({'error': 'Missing required fields'}), 400
@@ -214,8 +224,12 @@ def get_server():
             messages = []
             with open(file_path, "r") as log_file:
                 for line in log_file:
-                    conversation += line + "\n"
+                    if "Error:" not in line:
+                        conversation += line + "\n"
 
+            count_tokens = num_tokens_from_string(conversation, "gpt-3.5-turbo")
+            if count_tokens > 2048:
+                conversation = conversation[:1200]
             conversation += "\n What are the main insights from this focus group conversation?"
 
             messages.append(SystemMessage(content="You are a Market Researcher whose task is to "
