@@ -4,3 +4,59 @@
 }
 
 /* Additional styling can be added for labels, inputs, etc. */
+.personas-div {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  margin: 0;
+  background-color: #f2f2f2;
+}
+
+.container {
+  text-align: center;
+}
+
+.card-container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 20px;
+}
+
+.card {
+  border: 1px solid #8888FF;
+  border-radius: 8px;
+  padding: 20px;
+  width: 300px;
+  background-color: #fff;
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+h1 {
+  font-size: 24px;
+  color: #333;
+}
+
+p {
+  font-size: 16px;
+  color: #666;
+  margin: 10px 0;
+}
+
+.generate-button {
+  background-color: #8888FF;
+  color: #fff;
+  border: 4px solid white;
+  padding: 15px 30px; /* Increased padding for a larger button */
+  border-radius: 20px; /* Rounded corners */
+  font-size: 20px; /* Increased font size */
+  cursor: pointer;
+  margin-top: 20px;
+  display: inline-block;
+  transition: background-color 0.3s; /* Add a smooth color transition */
+}
+
+.generate-button:hover {
+  background-color: #5555BB;
+}

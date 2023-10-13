@@ -231,17 +231,14 @@
 
         return (
           <div className="min-h-screen flex overflow-hidden bg-gray-800 text-white">
-            {currentScreen != "visualization" && (
-              <div>
-                <h2>Personality Information Form</h2>
-                <PersonalityForm onSubmit={onSubmit} />
-              </div>
+            {currentScreen === "personality" && (
+              <PersonalityForm onSubmit={onSubmit} />
             )}
 
             {currentScreen === "visualization" && (
               <div>
                 {!worldState ? (
-                  <Loading />
+                  <Loading descr="world" />
                 ) : (
                   <WorldVisualisation worldState={worldState} logs={logs} onEndSimulation={onEndSimulation}/>
                 )}
@@ -333,14 +330,15 @@
         const addPersonas = (persona) => setPersonas(personas.concat(persona));
         let retries = 0;
         const generatePersonas = async () => {
+          setPersonas("loading");
           const count = 3;
-          const prompt = `I want you to generate ${count} diverse customer persona like the following example. In the directive section, tell
-1. what happened and why the persona needs or considers a new phone. It can just it is old, or broke or lost or felt in the water, or etc.
-2. What the persona thinks and want in a phone,
+          const prompt = `I want you to generate ${count} diverse customer personas from different ethnicity, like the following example. In the directive section, tell
+1. what happened and why the persona needs or considers a new phone. It can just it is old, or broke or lost or damaged, or etc.
+2. What the persona thinks and want in the new product,
 3. what is the budget. or other limiting factors.
 [{
           "first_name": "Sarah",
-          "private_bio": "Sara's Big Five Personality Test (BFPT),  Extroversion 10/40, Neuroticism 19/40, Openness to Experience 32/40, Agreeableness 32/40, Conscientiousness 38/40.
+          "private_bio": "Sara's Big Five Personality Test (BFPT),  Extroversion 10/40, Neuroticism 19/40, Openness to Experience 32/40, Agreeableness 32/40, Conscientiousness 38/4.
 Sarah is a photography enthusiast with a keen eye for capturing moments. She loves to travel, she like to cook. She hate math. She loves poetry. Her favorite TV show is friend. She is heterosexual, ",
           "public_bio": "Sara is 34, BSc in philosophy, sara is a teacher, and she is single mother of two girls. She rent a house in Detroit's suburb.",
           "directives": [
@@ -375,13 +373,43 @@ Make sure to generate json.`;
             }
           }
         };
+      
+        const PersonaCard = ({ persona }) => (
+          <div className="flex-auto rounded-lg shadow-md p-4 m-2 bg-white mx-3" style={{height: 200}}>
+            <h1 className="text-xl text-black font-semibold">{persona.first_name}</h1>
+            <p className="text-sm text-gray-600 mb-4">{persona.public_bio}</p>
+            <p className="text-sm text-gray-600 line-clamp-3">{persona.private_bio}</p>
+          </div>
+        );
+
+        const PersonaCardsContainer = ({ personas }) => (
+          <div className="flex justify-center items-center w-full mb-4 px-8">
+            {personas.map((persona, index) => (
+              <PersonaCard persona={persona} key={index} />
+            ))}
+          </div>
+        );
         
         return (
-          <div>
-            {
-              personas.map((persona) => <div><h1>{persona.name}</h1><p>{persona.public_bio}</p><p>{persona.private_bio}</p></div>)
-            }
-            <form onSubmit={handleSubmit}>
+          <div className="container personas-div flex justify-center items-center w-full flex-col mb-4" style={{maxWidth: "5000px"}}
+          >
+            <h1 class="text-7xl font-semibold mb-4">Focus Pocus</h1>
+            { personas == "loading" ? <Loading descr="personas" /> : <PersonaCardsContainer personas={personas} /> }
+            <div>
+              <button onClick={generatePersonas} className="generate-button text-white-500 border border-white hover:bg-blue-500 hover:text-white hover:border-white font-semibold m-2 py-3 px-6 rounded-lg text-lg">
+                Generate personas
+              </button>
+              <button
+                  type="button"
+                  onClick={onSubmit}
+                  className="generate-button text-white-500 border border-white hover:bg-blue-500 hover:text-white hover:border-white font-semibold py-3 px-6 m-2 rounded-lg text-lg"
+                >
+                  Start
+                </button>
+            </div>
+          </div>
+        );
+          /*{<form onSubmit={handleSubmit}>
               <div className="form-group">
                 <label htmlFor="first_name">First Name:</label>
                 <input
@@ -478,11 +506,8 @@ Make sure to generate json.`;
                 Start
               </button>
             </form>
-            <button onClick={generatePersonas} style={{ border: "3px solid #8888FF" }}>
-              Generate personas
-            </button>
-          </div>
-        );
+          }          </div>
+        );*/
       }
 
       function WorldVisualisation({ worldState, logs, onEndSimulation }) {
@@ -595,9 +620,9 @@ Make sure to generate json.`;
         return <span>{enabled ? text.substring(0, currentIndex) : text}</span>;
       }
 
-      function Loading() {
+      function Loading({ descr="" }) {
         return (
-          <div className="flex w-full items-center justify-center">
+          <div className="flex w-full items-center justify-center mb-4">
             <svg
               className="animate-spin -ml-1 mr-3 h-8 w-8 text-white"
               xmlns="http://www.w3.org/2000/svg"
@@ -619,7 +644,7 @@ Make sure to generate json.`;
               ></path>
             </svg>
             <span className="animate-pulse font-semibold">
-              Initializing world...
+              Initializing{descr ? ' ' + descr : descr}...
             </span>
           </div>
         );
