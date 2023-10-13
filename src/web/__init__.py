@@ -65,7 +65,9 @@ async def run_world_async():
 def run_world():
     run_in_new_loop(run_world_async())
 
+
 import subprocess
+
 
 def run_db_reset_command():
     try:
@@ -76,6 +78,7 @@ def run_db_reset_command():
         print(f"Command 'poetry run db-reset' failed with return code {e.returncode}.")
     except Exception as e:
         print(f"An error occurred: {e}")
+
 
 def get_server():
     app = Quart(__name__)
@@ -202,6 +205,34 @@ def get_server():
                             "description": description,
                         }
                         await websocket.send_json(data)
+
+    @app.websocket("/analyze")
+    async def logs_analyze():
+        file_path = os.path.join(os.path.dirname(__file__), "logs/agent.txt")
+        conversation = "Focus Group Conversation:\n"
+        try:
+            messages = []
+            with open(file_path, "r") as log_file:
+                for line in log_file:
+                    conversation += line + "\n"
+
+            conversation += "\n What are the main insights from this focus group conversation?"
+
+            messages.append(SystemMessage(content="You are a Market Researcher whose task is to "
+                                                  "analyze the focus group conversation "
+                                                  "transcript and "
+                                                  "identify insights about the product"))
+            messages.append(HumanMessage(content=conversation))
+            chat_llm = ChatModel(temperature=0, request_timeout=600)
+            response = await chat_llm.get_chat_completion(
+                messages=messages,
+                loading_text="🤔 Analyzing...",
+            )
+
+            return jsonify(response), 201
+
+        except Exception as e:
+            return jsonify(str(e)), 400
 
     @app.websocket("/world")
     async def world_websocket():
