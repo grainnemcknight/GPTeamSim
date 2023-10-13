@@ -231,13 +231,12 @@ def get_server():
                             'wait' not in line.lower() and
                             len(line) > 100):
                         conversation += line + "\n"
-            print("after file")
 
             count_tokens = num_tokens_from_string(conversation, "gpt-3.5-turbo")
-            if count_tokens > 2048:
+            if count_tokens > 3048:
                 conversation = conversation[:1200]
             conversation += ("\n Please list the positive and negative opinions and questions the "
-                             "focus group had about the product. ")
+                             "focus group had about the product in a maximum of 200 words.")
 
             messages.append(SystemMessage(content="You are a Market Researcher whose task is to "
                                                   "analyze the focus group conversation "
