@@ -235,15 +235,14 @@
               <PersonalityForm onSubmit={onSubmit} />
             )}
 
-            {currentScreen === "visualization" && (
-              <div>
-                {!worldState ? (
-                  <Loading descr="world" />
-                ) : (
-                  <WorldVisualisation worldState={worldState} logs={logs} onEndSimulation={onEndSimulation}/>
-                )}
+            {currentScreen === "visualization" && (!worldState ? (
+              <div className="container personas-div flex justify-center items-center w-full flex-col mb-4" style={{maxWidth: "5000px"}}>
+                <h1 className="text-7xl font-semibold mb-4">Focus Pocus</h1>            
+                <Loading descr="world" />
               </div>
-            )}
+            ) : (
+                <WorldVisualisation worldState={worldState} logs={logs} onEndSimulation={onEndSimulation}/>
+            ))}
 
             {currentScreen === "analysis" && (
               <Analysis />
@@ -357,10 +356,14 @@ Make sure to generate json.`;
               const personas = JSON.parse(response.content)
                 .map((persona) => ({
                   ...persona, 
+                  directives: [
+                    ...persona.directives,
+                    persona.first_name + " will participate in Focus Group to discuss the product in detail, and raise his concerns."
+                  ],
                   initial_plan: {
-                    "description": "Wait until Eric has welcomed and started the focus group.",
-                    "stop_condition": "Eric has asked a question and the disussion has started.",
-                    "location": "Google Head Quarters",
+                      "description": "Respond to Eric's question and contribute to the discussion.",
+                      "stop_condition": "Eric has asked a question and started the discussion.",
+                      "location": "Google Head Quarters"
                   }
                 }));
               addPersonas(personas);
@@ -391,11 +394,13 @@ Make sure to generate json.`;
         );
         
         return (
-          <div className="container personas-div flex justify-center items-center w-full flex-col mb-4" style={{maxWidth: "5000px"}}
-          >
-            <h1 class="text-7xl font-semibold mb-4">Focus Pocus</h1>
+          <div className="container personas-div flex justify-center items-center w-full flex-col mb-4" style={{maxWidth: "5000px"}}>
+            <h1 className="text-7xl font-semibold mb-4">Focus Pocus</h1>
             { personas == "loading" ? <Loading descr="personas" /> : <PersonaCardsContainer personas={personas} /> }
             <div>
+              <button onClick={console.warn("Unimplemented")} className="generate-button text-white-500 border border-white hover:bg-blue-500 hover:text-white hover:border-white font-semibold m-2 py-3 px-6 rounded-lg text-lg">
+                Add persona
+              </button>
               <button onClick={generatePersonas} className="generate-button text-white-500 border border-white hover:bg-blue-500 hover:text-white hover:border-white font-semibold m-2 py-3 px-6 rounded-lg text-lg">
                 Generate personas
               </button>
@@ -675,12 +680,12 @@ Make sure to generate json.`;
             console.error("Fetch error:", error);
           }
         };
-        return <div>
-          <div>
-            { analysis && <div><h1>Analysis:<h2>{analysis}</h2></h1></div> }
-          </div>
-          <button onClick={onAnalysis}>Analyze</button>  
-        </div>
+        return <div className="flex justify-center items-center w-full flex-col mb-4" style={{maxWidth: "5000px"}}>
+            <h1 className="text-7xl font-semibold mb-4">Focus Pocus</h1>
+            { analysis == "loading" && <Loading descr="analysis" />  }
+            { analysis != "loading" && analysis && <div><h1>Analysis:<h2>{analysis}</h2></h1></div> }
+            { !analysis && <button onClick={onAnalysis} className="generate-button text-white-500 border border-white hover:bg-blue-500 hover:text-white hover:border-white font-semibold py-3 px-6 m-2 rounded-lg text-lg">Analyze</button> }
+        </div>  
       }
 
       ReactDOM.render(<LogViewer />, document.getElementById("root"));
